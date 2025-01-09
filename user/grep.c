@@ -46,7 +46,7 @@ main(int argc, char *argv[])
   pattern = argv[1];
 
   if(argc <= 2){
-    grep(pattern, 0);
+    grep(pattern, 0); // pipe input here
     exit(0);
   }
 
