@@ -43,12 +43,9 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  char* cmdargv[MAXARGS];
-  for(int i = 0; i < MAXARGS; ++i) {
-    cmdargv[i] = malloc(sizeof(char)*32);
-  }
+  char cmdargv[MAXARGS][32];
   for(int i = 0; i < argc; ++i) {
-    printf("DEBUG: copy %s to cmdargv[%d]\n", argv[i], i);
+    //printf("DEBUG: copy %s to cmdargv[%d]\n", argv[i], i);
     strcpy(cmdargv[i], argv[i]);
   }
 
@@ -57,31 +54,44 @@ main(int argc, char *argv[])
   for(int i = 0; i < MAXARGS; ++i) {
     splitargv[i] = malloc(sizeof(char)*32);
   }
-  printf("DEBUG: Split argv...\n");
-  char buf[512];
-  read(0, buf, 1);
-  splitargv = str_split(buf, '\n');
-  int c = countChars(buf, '\n');
-  c += 1;
-  printf("DEBUG: Split count is %d\n", c);
+  //printf("DEBUG: Split argv...\n");
+  char* buf = malloc(sizeof(char)*64);
+  int num = read(0, buf, 64);
+  char* realbuf = malloc(sizeof(char)*num);
+  strcpy(realbuf, buf);
+  //printf("DEBUG: realbuf: %s\n buf: %s\n num: %d\n", realbuf, buf, num);
+  int c = countChars(realbuf, '\n');
+  if(c > 1) {
+    splitargv = str_split(realbuf, '\n');
+  } else {
+    strcpy(splitargv[0], realbuf);
+  }
+  //printf("DEBUG: Split count is %d\n", c);
 
-  char* finalargv[MAXARGS*3];
-  for(int i = 0; i < MAXARGS*3; ++i) {
+  char* finalargv[c*4];
+  for(int i = 0; i < c*4; ++i) {
     finalargv[i] = malloc(sizeof(char)*32);
   }
   for(int i = 0; i < c; ++i) {
-    finalargv[i*4+0] = cmdargv[1];
-    finalargv[i*4+1] = cmdargv[2];
-    finalargv[i*4+2] = splitargv[i];
+    strcpy(finalargv[i*4+0], cmdargv[1]);
+    strcpy(finalargv[i*4+1], cmdargv[2]);
+    strcpy(finalargv[i*4+2], splitargv[i]);
     finalargv[i*4+3] = 0;
-    printf("DEBUG: Final argv: %s %s %s\n", finalargv[i*4+0], finalargv[i*4+1], finalargv[i*4+2]);
+    //printf("DEBUG: Final argv: %s %s %s\n", finalargv[i*4+0], finalargv[i*4+1], finalargv[i*4+2]);
   }
 
   for(int i = 0; i < c; ++i) {
     int pid = fork();
     if(pid == 0) {
-        printf("DEBUG: Start exec cmd: %s\n", cmdargv[1]);
+        //printf("DEBUG: exec %s\n", cmdargv[1]);
         exec(cmdargv[1], finalargv+i*4);
+        //for(int i = 0; i < MAXARGS; ++i) {
+        //  free(splitargv[i]);
+        //}
+        //free(splitargv);
+        //for(int i = 0; i < c*4; ++i) {
+        //    free(finalargv[i]);
+        //}
     } else {
         wait(0);
     }
